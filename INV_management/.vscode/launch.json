@@ -1,0 +1,54 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "request": "launch",
+            "name": "Launch DBConnectionTest",
+            "mainClass": "DBConnectionTest",
+            "classPaths": [
+                "${workspaceFolder}/lib/mysql-connector-j-9.2.0.jar",
+                "${workspaceFolder}/bin" // Assuming your compiled classes are in the 'bin' directory
+            ]
+        },
+        {
+            "type": "java",
+            "request": "launch",
+            "name": "Launch InventoryGUI",
+            "mainClass": "InventoryGUI",
+            "classPaths": [
+                "${workspaceFolder}/bin" // Assuming your compiled classes are in the 'bin' directory
+            ]
+        },
+        {
+            "type": "java",
+            "request": "launch",
+            "name": "Launch DatabaseConnection",
+            "mainClass": "DatabaseConnection",
+            "classPaths": [
+                "${workspaceFolder}/lib/mysql-connector-j-9.2.0.jar",
+                "${workspaceFolder}/bin" // Assuming your compiled classes are in the 'bin' directory
+            ]
+        },
+        {
+            "type": "java",
+            "request": "launch",
+            "name": "Launch AddProductGUI",
+            "mainClass": "AddProductGUI",
+            "classPaths": [
+                "${workspaceFolder}/lib/mysql-connector-j-9.2.0.jar",
+                "${workspaceFolder}/bin" // Assuming your compiled classes are in the 'bin' directory
+            ]
+        },
+        {
+            "type": "java",
+            "request": "launch",
+            "name": "Launch InventoryManagementGUI",
+            "mainClass": "InventoryManagementGUI",
+            "classPaths": [
+                "${workspaceFolder}/lib/mysql-connector-j-9.2.0.jar",
+                "${workspaceFolder}/bin" // Assuming your compiled classes are in the 'bin' directory
+            ]
+        }
+    ]
+}
