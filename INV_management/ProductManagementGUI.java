@@ -1,22 +1,62 @@
 import java.sql.*;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
-public class AddProductGUI {
+public class ProductManagementGUI {
     private static DefaultTableModel tableModel;
 
     public static void main(String[] args) {
-        JFrame frame = new JFrame("Add Product");
+        JFrame frame = new JFrame("Product Management");
         frame.setSize(600, 400);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        JPanel panel = new JPanel();
-        panel.setLayout(null);
-        frame.add(panel);
-        placeComponents(panel);
+
+        JMenuBar menuBar = new JMenuBar();
+        JMenu menu = new JMenu("Menu");
+        JMenuItem addProductMenuItem = new JMenuItem("AddProduct");
+        JMenuItem updateProductMenuItem = new JMenuItem("Update");
+        JMenuItem deleteProductMenuItem = new JMenuItem("Delete");
+
+        menu.add(addProductMenuItem);
+        menu.add(updateProductMenuItem);
+        menu.add(deleteProductMenuItem);
+        menuBar.add(menu);
+        frame.setJMenuBar(menuBar);
+
+        JPanel mainPanel = new JPanel(new CardLayout());
+        JPanel addProductPanel = createAddProductPanel();
+        JPanel updateProductPanel = createUpdateProductPanel();
+        JPanel deleteProductPanel = createDeleteProductPanel();
+
+        mainPanel.add(addProductPanel, "AddProduct");
+        mainPanel.add(updateProductPanel, "Update");
+        mainPanel.add(deleteProductPanel, "Delete");
+
+        addProductMenuItem.addActionListener(e -> {
+            CardLayout cl = (CardLayout) (mainPanel.getLayout());
+            cl.show(mainPanel, "AddProduct");
+        });
+
+        updateProductMenuItem.addActionListener(e -> {
+            CardLayout cl = (CardLayout) (mainPanel.getLayout());
+            cl.show(mainPanel, "Update");
+        });
+
+        deleteProductMenuItem.addActionListener(e -> {
+            CardLayout cl = (CardLayout) (mainPanel.getLayout());
+            cl.show(mainPanel, "Delete");
+        });
+
+        frame.add(mainPanel);
         frame.setVisible(true);
     }
 
-    private static void placeComponents(JPanel panel) {
+    private static JPanel createAddProductPanel() {
+        JPanel panel = new JPanel();
+        panel.setLayout(null);
+
         JLabel nameLabel = new JLabel("Product Name:");
         nameLabel.setBounds(10, 20, 100, 25);
         panel.add(nameLabel);
@@ -80,6 +120,22 @@ public class AddProductGUI {
 
         // Load initial data
         updateTable();
+
+        return panel;
+    }
+
+    private static JPanel createUpdateProductPanel() {
+        JPanel panel = new JPanel();
+        panel.add(new JLabel("Update Product Panel"));
+        // Add components for updating product values here
+        return panel;
+    }
+
+    private static JPanel createDeleteProductPanel() {
+        JPanel panel = new JPanel();
+        panel.add(new JLabel("Delete Product Panel"));
+        // Add components for deleting product values here
+        return panel;
     }
 
     private static void addProductToDatabase(String name, int stock, int reorderLevel, double price) {
