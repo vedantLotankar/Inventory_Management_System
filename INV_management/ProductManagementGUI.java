@@ -1,12 +1,14 @@
+import java.awt.*;
 import java.sql.*;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 public class ProductManagementGUI {
     private static DefaultTableModel tableModel;
+    private static JComboBox<String> productComboBox;
+    private static JTextField updateStockText;
+    private static JTextField updateReorderText;
+    private static JTextField updatePriceText;
 
     public static void main(String[] args) {
         JFrame frame = new JFrame("Product Management");
@@ -42,6 +44,7 @@ public class ProductManagementGUI {
         updateProductMenuItem.addActionListener(e -> {
             CardLayout cl = (CardLayout) (mainPanel.getLayout());
             cl.show(mainPanel, "Update");
+            loadProductNames();
         });
 
         deleteProductMenuItem.addActionListener(e -> {
@@ -126,8 +129,62 @@ public class ProductManagementGUI {
 
     private static JPanel createUpdateProductPanel() {
         JPanel panel = new JPanel();
-        panel.add(new JLabel("Update Product Panel"));
-        // Add components for updating product values here
+        panel.setLayout(null);
+
+        JLabel selectProductLabel = new JLabel("Select Product:");
+        selectProductLabel.setBounds(10, 20, 100, 25);
+        panel.add(selectProductLabel);
+
+        productComboBox = new JComboBox<>();
+        productComboBox.setBounds(150, 20, 165, 25);
+        panel.add(productComboBox);
+
+        JLabel updateStockLabel = new JLabel("Stock:");
+        updateStockLabel.setBounds(10, 50, 100, 25);
+        panel.add(updateStockLabel);
+
+        updateStockText = new JTextField(20);
+        updateStockText.setBounds(150, 50, 165, 25);
+        panel.add(updateStockText);
+
+        JLabel updateReorderLabel = new JLabel("Reorder Level:");
+        updateReorderLabel.setBounds(10, 80, 100, 25);
+        panel.add(updateReorderLabel);
+
+        updateReorderText = new JTextField(20);
+        updateReorderText.setBounds(150, 80, 165, 25);
+        panel.add(updateReorderText);
+
+        JLabel updatePriceLabel = new JLabel("Price:");
+        updatePriceLabel.setBounds(10, 110, 100, 25);
+        panel.add(updatePriceLabel);
+
+        updatePriceText = new JTextField(20);
+        updatePriceText.setBounds(150, 110, 165, 25);
+        panel.add(updatePriceText);
+
+        JButton updateButton = new JButton("Update Product");
+        updateButton.setBounds(150, 140, 150, 25);
+        panel.add(updateButton);
+
+        updateButton.addActionListener(e -> {
+            try {
+                String selectedProduct = (String) productComboBox.getSelectedItem();
+                int stock = Integer.parseInt(updateStockText.getText());
+                int reorderLevel = Integer.parseInt(updateReorderText.getText());
+                double price = Double.parseDouble(updatePriceText.getText());
+
+                System.out.println("Updating product: " + selectedProduct + ", Stock: " + stock + ", Reorder Level: " + reorderLevel + ", Price: " + price);
+
+                updateProductInDatabase(selectedProduct, stock, reorderLevel, price);
+                JOptionPane.showMessageDialog(null, "Product Updated Successfully!");
+                updateTable();
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(null, "Invalid input. Please enter valid numbers for stock, reorder level, and price.");
+                ex.printStackTrace();
+            }
+        });
+
         return panel;
     }
 
@@ -155,6 +212,23 @@ public class ProductManagementGUI {
         }
     }
 
+    private static void updateProductInDatabase(String name, int stock, int reorderLevel, double price) {
+        try (Connection conn = DatabaseConnection.connect();
+             PreparedStatement stmt = conn.prepareStatement("UPDATE products SET stock_quantity = ?, reorder_level = ?, price = ? WHERE name = ?")) {
+            stmt.setInt(1, stock);
+            stmt.setInt(2, reorderLevel);
+            stmt.setDouble(3, price);
+            stmt.setString(4, name);
+            int rowsUpdated = stmt.executeUpdate();
+            if (rowsUpdated > 0) {
+                System.out.println("Product updated successfully!");
+            }
+        } catch (SQLException e) {
+            System.err.println("SQL error occurred while updating product in database.");
+            e.printStackTrace();
+        }
+    }
+
     private static void updateTable() {
         try (Connection conn = DatabaseConnection.connect();
              Statement stmt = conn.createStatement();
@@ -169,6 +243,20 @@ public class ProductManagementGUI {
             }
         } catch (SQLException e) {
             System.err.println("SQL error occurred while fetching products from database.");
+            e.printStackTrace();
+        }
+    }
+
+    private static void loadProductNames() {
+        try (Connection conn = DatabaseConnection.connect();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT name FROM products")) {
+            productComboBox.removeAllItems();
+            while (rs.next()) {
+                productComboBox.addItem(rs.getString("name"));
+            }
+        } catch (SQLException e) {
+            System.err.println("SQL error occurred while fetching product names from database.");
             e.printStackTrace();
         }
     }
