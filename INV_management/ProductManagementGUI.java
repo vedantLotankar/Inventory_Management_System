@@ -9,6 +9,7 @@ public class ProductManagementGUI {
     private static JTextField updateStockText;
     private static JTextField updateReorderText;
     private static JTextField updatePriceText;
+    private static JTable deleteTable;
 
     public static void main(String[] args) {
         JFrame frame = new JFrame("Product Management");
@@ -50,6 +51,7 @@ public class ProductManagementGUI {
         deleteProductMenuItem.addActionListener(e -> {
             CardLayout cl = (CardLayout) (mainPanel.getLayout());
             cl.show(mainPanel, "Delete");
+            updateDeleteTable();
         });
 
         frame.add(mainPanel);
@@ -102,12 +104,12 @@ public class ProductManagementGUI {
                 int stock = Integer.parseInt(stockText.getText());
                 int reorderLevel = Integer.parseInt(reorderText.getText());
                 double price = Double.parseDouble(priceText.getText());
-
+        
                 System.out.println("Adding product: " + name + ", Stock: " + stock + ", Reorder Level: " + reorderLevel + ", Price: " + price);
-
+        
                 addProductToDatabase(name, stock, reorderLevel, price);
                 JOptionPane.showMessageDialog(null, "Product Added Successfully!");
-                updateTable();
+                updateTable(); 
             } catch (NumberFormatException ex) {
                 JOptionPane.showMessageDialog(null, "Invalid input. Please enter valid numbers for stock, reorder level, and price.");
                 ex.printStackTrace();
@@ -185,13 +187,47 @@ public class ProductManagementGUI {
             }
         });
 
+        // Table to display products
+        tableModel = new DefaultTableModel(new String[]{"Name", "Stock", "Reorder Level", "Price"}, 0);
+        JTable table = new JTable(tableModel);
+        JScrollPane scrollPane = new JScrollPane(table);
+        scrollPane.setBounds(10, 180, 560, 150);
+        panel.add(scrollPane);
+
+        // Load initial data
+        updateTable();
+
         return panel;
     }
 
     private static JPanel createDeleteProductPanel() {
         JPanel panel = new JPanel();
-        panel.add(new JLabel("Delete Product Panel"));
-        // Add components for deleting product values here
+        panel.setLayout(null);
+
+        // Table to display products
+        DefaultTableModel deleteTableModel = new DefaultTableModel(new String[]{"Name", "Stock", "Reorder Level", "Price"}, 0);
+        deleteTable = new JTable(deleteTableModel);
+        JScrollPane scrollPane = new JScrollPane(deleteTable);
+        scrollPane.setBounds(10, 20, 560, 150);
+        panel.add(scrollPane);
+
+        JButton deleteButton = new JButton("Delete Product");
+        deleteButton.setBounds(220, 180, 150, 25);
+        panel.add(deleteButton);
+
+        deleteButton.addActionListener(e -> {
+            int selectedRow = deleteTable.getSelectedRow();
+            if (selectedRow != -1) {
+                String selectedProduct = (String) deleteTable.getValueAt(selectedRow, 0);
+                deleteProductFromDatabase(selectedProduct);
+                JOptionPane.showMessageDialog(null, "Product Deleted Successfully!");
+                updateDeleteTable();
+                updateTable();
+            } else {
+                JOptionPane.showMessageDialog(null, "Please select a product to delete.");
+            }
+        });
+
         return panel;
     }
 
@@ -229,6 +265,20 @@ public class ProductManagementGUI {
         }
     }
 
+    private static void deleteProductFromDatabase(String name) {
+        try (Connection conn = DatabaseConnection.connect();
+             PreparedStatement stmt = conn.prepareStatement("DELETE FROM products WHERE name = ?")) {
+            stmt.setString(1, name);
+            int rowsDeleted = stmt.executeUpdate();
+            if (rowsDeleted > 0) {
+                System.out.println("Product deleted successfully!");
+            }
+        } catch (SQLException e) {
+            System.err.println("SQL error occurred while deleting product from database.");
+            e.printStackTrace();
+        }
+    }
+
     private static void updateTable() {
         try (Connection conn = DatabaseConnection.connect();
              Statement stmt = conn.createStatement();
@@ -240,6 +290,25 @@ public class ProductManagementGUI {
                 int reorderLevel = rs.getInt("reorder_level");
                 double price = rs.getDouble("price");
                 tableModel.addRow(new Object[]{name, stock, reorderLevel, price});
+            }
+        } catch (SQLException e) {
+            System.err.println("SQL error occurred while fetching products from database.");
+            e.printStackTrace();
+        }
+    }
+
+    private static void updateDeleteTable() {
+        try (Connection conn = DatabaseConnection.connect();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT name, stock_quantity, reorder_level, price FROM products")) {
+            DefaultTableModel deleteTableModel = (DefaultTableModel) deleteTable.getModel();
+            deleteTableModel.setRowCount(0); // Clear existing data
+            while (rs.next()) {
+                String name = rs.getString("name");
+                int stock = rs.getInt("stock_quantity");
+                int reorderLevel = rs.getInt("reorder_level");
+                double price = rs.getDouble("price");
+                deleteTableModel.addRow(new Object[]{name, stock, reorderLevel, price});
             }
         } catch (SQLException e) {
             System.err.println("SQL error occurred while fetching products from database.");
