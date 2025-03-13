@@ -10,6 +10,11 @@ public class ProductManagementGUI {
     private static JTextField updateReorderText;
     private static JTextField updatePriceText;
     private static JTable deleteTable;
+    private static int userId;
+
+    public static void setUserId(int userId) {
+        ProductManagementGUI.userId = userId;
+    }
 
     public static void main(String[] args) {
         JFrame frame = new JFrame("Product Management");
@@ -281,9 +286,10 @@ public class ProductManagementGUI {
 
     private static void updateTable() {
         try (Connection conn = DatabaseConnection.connect();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery("SELECT name, stock_quantity, reorder_level, price FROM products")) {
-            tableModel.setRowCount(0); // Clear existing data
+             PreparedStatement stmt = conn.prepareStatement("SELECT name, stock_quantity, reorder_level, price FROM products WHERE user_id = ?")) {
+            stmt.setInt(1, userId);
+            ResultSet rs = stmt.executeQuery();
+            tableModel.setRowCount(0);
             while (rs.next()) {
                 String name = rs.getString("name");
                 int stock = rs.getInt("stock_quantity");
@@ -292,7 +298,6 @@ public class ProductManagementGUI {
                 tableModel.addRow(new Object[]{name, stock, reorderLevel, price});
             }
         } catch (SQLException e) {
-            System.err.println("SQL error occurred while fetching products from database.");
             e.printStackTrace();
         }
     }
